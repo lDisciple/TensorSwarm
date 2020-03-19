@@ -40,3 +40,10 @@ def log_diversity(x, step):
         tf.summary.scalar("min", tf.math.reduce_min(div), step=step)
         tf.summary.scalar("max", tf.math.reduce_max(div), step=step)
         tf.summary.scalar("mean", tf.math.reduce_mean(div), step=step)
+
+@tf.function
+def log_personalbest(pb, step):
+    with tf.name_scope("personal_best"):
+        tf.summary.scalar("min", tf.math.reduce_min(pb), step=step)
+        tf.summary.scalar("max", tf.math.reduce_max(pb), step=step)
+        tf.summary.scalar("mean", tf.math.reduce_mean(pb), step=step)
