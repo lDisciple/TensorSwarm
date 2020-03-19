@@ -37,7 +37,7 @@ def gbest(f, bounds, particles=1, dim=3,
             r2 = tf.random.uniform([particles, dim], dtype=tf.float16)
 
             cog = r1*(pb_x-x)
-            soc = r2*(pb_x-gb_x)
+            soc = r2*(gb_x-x)
 
             v = w*v + c1*cog + c2*soc
 
