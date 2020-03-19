@@ -18,7 +18,7 @@ def bounded_fitness(f, x, bounds):
     fit = tf.where(boundary_fails, x=tf.constant(float('Inf'), tf.float16), y=fit) # Set out of bounds to inf
 
     return fit
-    
+
 @tf.function
 def eval_personalbest(fit, x, pb, pb_x):
     cond = pb > fit
@@ -27,3 +27,16 @@ def eval_personalbest(fit, x, pb, pb_x):
     pb_x = tf.where(cond, x=x, y=pb_x)
 
     return pb, pb_x
+
+@tf.function
+def diversity(x):
+    a = tf.math.reduce_mean(x, axis=0)
+    return tf.norm(x-a, axis=1)
+
+@tf.function
+def log_diversity(x, step):
+    with tf.name_scope("diversity"):
+        div = diversity(x)
+        tf.summary.scalar("min", tf.math.reduce_min(div), step=step)
+        tf.summary.scalar("max", tf.math.reduce_max(div), step=step)
+        tf.summary.scalar("mean", tf.math.reduce_mean(div), step=step)
