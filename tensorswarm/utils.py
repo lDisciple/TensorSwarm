@@ -8,6 +8,10 @@ def init_particles(particles, dim, bounds):
     
     return x, v
 
+def init_predators(predators, dim, bounds):
+    return tf.random.uniform([predators, dim], dtype=tf.float16,
+                minval=bounds[0], maxval=bounds[1])
+
 @tf.function
 def bounded_fitness(f, x, bounds):
     fit = f(x)
@@ -47,3 +51,30 @@ def log_personalbest(pb, step):
         tf.summary.scalar("min", tf.math.reduce_min(pb), step=step)
         tf.summary.scalar("max", tf.math.reduce_max(pb), step=step)
         tf.summary.scalar("mean", tf.math.reduce_mean(pb), step=step)
+
+@tf.function
+def nearest_particle(x, swarm):
+    return swarm[tf.argmin(tf.norm(swarm-x, axis=1))]
+
+@tf.function
+def nearest_particles(x, swarm):
+    return tf.map_fn(lambda x: nearest_particle(x, swarm), x)
+
+@tf.function
+def fear_component(x, x_pred, alpha, beta, fear_factor):
+    r = tf.random.uniform(x.shape, dtype=tf.float16)
+    target = x - nearest_particles(x, x_pred) # Run from nearest predators
+    d = tf.norm(target, axis=1)
+    D = alpha*tf.exp(-beta*d)
+    comp = r*D*target/d
+    with tf.name_scope("bravery"):
+        mood = tf.random.uniform(x.shape[:1], dtype=tf.float16)
+        cond = tf.reshape(mood < fear_factor, (-1, 1)) # Runners = True
+        comp = tf.where(cond, x=comp, y=0)
+
+    return comp
+
+@tf.function
+def predator_velocity(x, best, vmax):
+    r = tf.random.uniform(x.shape, maxval=vmax, dtype=tf.float16)
+    return r*(best-x)
