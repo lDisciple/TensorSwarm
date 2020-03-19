@@ -45,6 +45,7 @@ def gbest(f, bounds, particles=1, dim=3,
 
         # Summary
         tf.summary.scalar("global_best", gb, step=i)
+        log_personalbest(pb, i)
         log_diversity(x, i)
 
         # Stopping condition
