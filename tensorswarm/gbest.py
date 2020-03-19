@@ -23,10 +23,7 @@ def gbest(f, bounds, particles=1, dim=3,
         fit = bounded_fitness(f, x, bounds)
 
         # Update personal best
-        cond = pb > fit
-        pb = tf.where(pb > fit, x=fit, y=pb)
-        cond = tf.reshape(cond, (-1, 1))
-        pb_x = tf.where(cond, x=x, y=pb_x)
+        pb, pb_x = eval_personalbest(fit, x, pb, pb_x)
 
         # Global best
         gb_i = tf.argmin(pb)

@@ -18,3 +18,12 @@ def bounded_fitness(f, x, bounds):
     fit = tf.where(boundary_fails, x=tf.constant(float('Inf'), tf.float16), y=fit) # Set out of bounds to inf
 
     return fit
+    
+@tf.function
+def eval_personalbest(fit, x, pb, pb_x):
+    cond = pb > fit
+    pb = tf.where(pb > fit, x=fit, y=pb)
+    cond = tf.reshape(cond, (-1, 1))
+    pb_x = tf.where(cond, x=x, y=pb_x)
+
+    return pb, pb_x
