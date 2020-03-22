@@ -15,7 +15,7 @@ def gbest(f, bounds, particles=1, dim=3,
     # Constants
 
     # Main loop
-    i = tf.constant(0, tf.int64) 
+    i = tf.constant(0, tf.int64)
     while iters > i:
         # Fitness
         with tf.name_scope("fitness"):
@@ -42,9 +42,10 @@ def gbest(f, bounds, particles=1, dim=3,
             v = w*v + c1*cog + c2*soc
 
             x += v
-
+            
         # Summary
         tf.summary.scalar("global_best", gb, step=i)
+        log_boundary_violations(x, bounds, i)
         log_personalbest(pb, i)
         log_diversity(x, i)
 
@@ -57,12 +58,11 @@ if __name__ == '__main__':
     from functions import *
     import time
 
-    particles = 3
-    dim = 3
-    iters = 1000
+    particles = 6
+    dim = 5
+    iters = 2000
 
     writer = tf.summary.create_file_writer("../logs/gbest_{}".format(time.strftime("%Y-%m-%d_%H:%M:%S")))
     with writer.as_default():
         val, x, i  = gbest(f_abs, (-100,100), particles=particles, dim=dim, iters=iters)
         print(f"{val} @ {x} - step: {i}")
-    
