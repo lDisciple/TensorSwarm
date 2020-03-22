@@ -63,8 +63,8 @@ def lpredator(f, bounds, particles=6, predators=1, dim=3,
 
             x += v
 
-            # preb_nb_x = nearest_particles(x_pred, nb_x)
-            x_pred += predator_velocity(x_pred, tf.zeros([dim], dtype=dtype), pred_vmax)
+            preb_nb_x = nearest_particles(x_pred, nb_x)
+            x_pred += predator_velocity(x_pred, preb_nb_x, pred_vmax)
 
         # Summary
         log_boundary_violations(x, bounds, i)
