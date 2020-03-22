@@ -5,7 +5,7 @@ def init_particles(particles, dim, bounds):
     x = tf.random.uniform([particles, dim], dtype=tf.float16,
         minval=bounds[0], maxval=bounds[1])
     v = tf.zeros([particles, dim], dtype=tf.float16)
-    
+
     return x, v
 
 def init_predators(predators, dim, bounds):
@@ -65,6 +65,7 @@ def fear_component(x, x_pred, alpha, beta, fear_factor):
     r = tf.random.uniform(x.shape, dtype=tf.float16)
     target = x - nearest_particles(x, x_pred) # Run from nearest predators
     d = tf.norm(target, axis=1)
+    d = tf.reshape(d, (-1,1))
     D = alpha*tf.exp(-beta*d)
     comp = r*D*target/d
     with tf.name_scope("bravery"):

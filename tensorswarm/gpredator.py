@@ -4,7 +4,7 @@ from utils import *
 @tf.function
 def gpredator(f, bounds, particles=6, predators=1, dim=3,
             iters=1000,
-            fear_factor=0.8, prey_vmax=0.04, fear_dist=0.1, pred_vmax=0.008,
+            fear_factor=0.8, prey_vmax=0.04, fear_dist=0.1, pred_vmax=0.05,
             w=0.9, c1=0.7, c2=0.7, c3=0.7):
     # Init
     x, v = init_particles(particles, dim, bounds)
@@ -23,6 +23,7 @@ def gpredator(f, bounds, particles=6, predators=1, dim=3,
     We scale it based on dimensions as more dimensions means bigger distances.
     """
     beta = (4/(fear_dist*bound_dist)) / tf.math.sqrt(tf.cast(dim, tf.float16))
+    #tf.print(alpha, beta)
 
     # Main loop
     i = tf.constant(0, tf.int64)
@@ -53,7 +54,7 @@ def gpredator(f, bounds, particles=6, predators=1, dim=3,
             v = w*v + c1*cog + c2*soc + fear
 
             x += v
-            x_pred += predator_velocity(x_pred, gb, pred_vmax)
+            x_pred += predator_velocity(x_pred, gb_x, pred_vmax)
 
         # Summary
         tf.summary.scalar("global_best", gb, step=i)
