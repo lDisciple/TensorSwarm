@@ -4,7 +4,7 @@ from utils import *
 @tf.function
 def gpredator(f, bounds, particles=6, predators=1, dim=3,
             iters=1000,
-            fear_factor=0.8, prey_vmax=0.2, fear_dist=0.1, pred_vmax=0.2,
+            fear_factor=0.8, prey_vmax=0.04, fear_dist=0.1, pred_vmax=0.008,
             w=0.9, c1=0.7, c2=0.7, c3=0.7):
     # Init
     x, v = init_particles(particles, dim, bounds)
@@ -19,13 +19,13 @@ def gpredator(f, bounds, particles=6, predators=1, dim=3,
     bound_dist = bounds[1] - bounds[0]
     alpha = prey_vmax*bound_dist # Velocity at distance 0 for the predator
     """
-    2/b is the distance where the prey starts running with a reasonable magnitude.
+    4/b is the distance where the prey starts running with a reasonable magnitude.
     We scale it based on dimensions as more dimensions means bigger distances.
     """
-    beta = 2/(tf.math.sqrt(tf.cast(dim, tf.float16))*fear_dist*bound_dist) 
+    beta = (4/(fear_dist*bound_dist)) / tf.math.sqrt(tf.cast(dim, tf.float16))
 
     # Main loop
-    i = tf.constant(0, tf.int64) 
+    i = tf.constant(0, tf.int64)
     while iters > i:
         # Fitness
         with tf.name_scope("fitness"):
@@ -54,7 +54,7 @@ def gpredator(f, bounds, particles=6, predators=1, dim=3,
 
             x += v
             x_pred += predator_velocity(x_pred, gb, pred_vmax)
-        
+
         # Summary
         tf.summary.scalar("global_best", gb, step=i)
         log_personalbest(pb, i)
@@ -81,4 +81,3 @@ if __name__ == '__main__':
             predators=predators,
             iters=iters)
         print(f"{val} @ {x} - step: {i}")
-    
