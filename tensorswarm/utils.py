@@ -90,6 +90,19 @@ def fear_component(x, x_pred, alpha, beta, fear_factor):
     return comp
 
 @tf.function
+def distance_tournament_select(x, swarm, k=tf.constant(2)):
+    indices = tf.random.uniform([x.shape[0], k],
+                                maxval=swarm.shape[0],
+                                dtype=tf.int32)
+    selected = tf.gather(swarm, indices)
+    x = tf.reshape(x, (-1, 1, x.shape[1]))
+    d = tf.norm(selected-x, axis=2)
+    left=d[:, 0]
+    right=d[:, 1]
+    b = tf.reshape(left < right, (-1,1))
+    return tf.where(b, x=selected[:,0], y=selected[:,1])
+
+@tf.function
 def predator_velocity(x, best, vmax):
     r = tf.random.uniform(x.shape, maxval=vmax, dtype=x.dtype)
     return r*(best-x)
