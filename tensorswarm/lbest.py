@@ -9,11 +9,10 @@ def lbest(f, bounds, particles=1, dim=3,
     x, v = init_particles(particles, dim, bounds)
     pb = f(x)
     pb_x = tf.identity(x)
-    nb_x = tf.zeros([dim], dtype=tf.float16)
 
     # Constants
     prange = tf.range(particles)
-    
+
     nb_mask = tf.stack((
         tf.math.floormod(prange+particles-1, particles),
         prange,
@@ -22,7 +21,7 @@ def lbest(f, bounds, particles=1, dim=3,
     nb_mask = tf.reshape(nb_mask, (particles, 3, 1))
 
     # Main loop
-    i = tf.constant(0, tf.int64) 
+    i = tf.constant(0, tf.int64)
     while iters > i:
         # Fitness
         with tf.name_scope("fitness"):
@@ -32,12 +31,12 @@ def lbest(f, bounds, particles=1, dim=3,
         with tf.name_scope("personalbest"):
             pb, pb_x = eval_personalbest(fit, x, pb, pb_x)
 
-        # Global best
+        # Neighbourhood best
         with tf.name_scope("neighbourhoodbest"):
             choices = tf.gather_nd(pb, nb_mask)
             choices = tf.argmin(choices, axis=1, output_type=tf.int32)
             indices = tf.math.floormod(prange + choices - 1, particles)
-            nb_x = tf.gather(x, indices)
+            nb_x = tf.gather(pb_x, indices)
 
         # Movement
         with tf.name_scope("movement"):
@@ -51,7 +50,11 @@ def lbest(f, bounds, particles=1, dim=3,
 
             x += v
 
+        tf.print("step:", i)
+        tf.print("distances:", tf.norm(x, axis=1))
+        tf.print("---------------------------------------")
         # Summary
+        log_boundary_violations(x, bounds, i)
         log_personalbest(pb, i)
         log_diversity(x, i)
 
@@ -65,12 +68,11 @@ if __name__ == '__main__':
     from functions import *
     import time
 
-    particles = 3
-    dim = 3
-    iters = 1000
+    particles = 30
+    dim = 30
+    iters = 5000
 
     writer = tf.summary.create_file_writer("../logs/lbest_{}".format(time.strftime("%Y-%m-%d_%H:%M:%S")))
     with writer.as_default():
         val, x, i  = lbest(f_abs, (-100,100), particles=particles, dim=dim, iters=iters)
         print(f"{val} @ {x} - step: {i}")
-    
