@@ -1,5 +1,5 @@
 import tensorflow as tf
-from utils import *
+from ..utils import *
 
 @tf.function
 def lbest(f, bounds, particles=1, dim=3,
@@ -65,7 +65,7 @@ def lbest(f, bounds, particles=1, dim=3,
     best_i = tf.argmin(pb)
     return pb[best_i], pb_x[best_i], i
 if __name__ == '__main__':
-    from functions import *
+    from ..functions import *
     import time
 
     particles = 30

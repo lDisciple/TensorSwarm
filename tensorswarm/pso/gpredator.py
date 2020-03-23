@@ -1,10 +1,11 @@
 import tensorflow as tf
-from utils import *
+from ..utils import *
 
 @tf.function
-def gbest(f, bounds, particles=1, dim=3,
+def gpredator(f, bounds, particles=6, predators=1, dim=3,
             iters=1000,
-            w=0.9, c1=0.7, c2=0.7):
+            fear_factor=0.8, prey_vmax=0.04, fear_dist=0.1, pred_vmax=0.02,
+            w=0.9, c1=0.7, c2=0.7, c3=0.7):
     # Init
     x, v = init_particles(particles, dim, bounds)
     pb = f(x)
@@ -12,7 +13,17 @@ def gbest(f, bounds, particles=1, dim=3,
     gb = tf.constant(float('Inf'), dtype=tf.float16)
     gb_x = tf.zeros([dim], dtype=tf.float16)
 
+    x_pred = init_predators(predators, dim, bounds)
+
     # Constants
+    bound_dist = bounds[1] - bounds[0]
+    alpha = prey_vmax*bound_dist # Velocity at distance 0 for the predator
+    """
+    4/b is the distance where the prey starts running with a reasonable magnitude.
+    We scale it based on dimensions as more dimensions means bigger distances.
+    """
+    beta = (4/(fear_dist*bound_dist)) / tf.math.sqrt(tf.cast(dim, tf.float16))
+    #tf.print(alpha, beta)
 
     # Main loop
     i = tf.constant(0, tf.int64)
@@ -36,13 +47,15 @@ def gbest(f, bounds, particles=1, dim=3,
             r1 = tf.random.uniform([particles, dim], dtype=tf.float16)
             r2 = tf.random.uniform([particles, dim], dtype=tf.float16)
 
-            cog = r1*(pb_x-x)
-            soc = r2*(gb_x-x)
+            fear = fear_component(x, x_pred, alpha, beta, fear_factor)
+            cog  = r1*(pb_x-x)
+            soc  = r2*(gb_x-x)
 
-            v = w*v + c1*cog + c2*soc
+            v = w*v + c1*cog + c2*soc + c3*fear
 
             x += v
-            
+            x_pred += predator_velocity(x_pred, gb_x, pred_vmax)
+
         # Summary
         tf.summary.scalar("global_best", gb, step=i)
         log_boundary_violations(x, bounds, i)
@@ -55,14 +68,18 @@ def gbest(f, bounds, particles=1, dim=3,
 
     return gb, gb_x, i
 if __name__ == '__main__':
-    from functions import *
+    from ..functions import *
     import time
 
-    particles = 6
-    dim = 5
-    iters = 2000
+    particles = 30
+    predators = 2
+    dim = 30
+    iters = 5000
 
-    writer = tf.summary.create_file_writer("../logs/gbest_{}".format(time.strftime("%Y-%m-%d_%H:%M:%S")))
+    writer = tf.summary.create_file_writer("../logs/gpredator_{}".format(time.strftime("%Y-%m-%d_%H:%M:%S")))
     with writer.as_default():
-        val, x, i  = gbest(f_abs, (-100,100), particles=particles, dim=dim, iters=iters)
+        val, x, i  = gpredator(f_abs, (-100,100),
+            particles=particles, dim=dim,
+            predators=predators,
+            iters=iters)
         print(f"{val} @ {x} - step: {i}")

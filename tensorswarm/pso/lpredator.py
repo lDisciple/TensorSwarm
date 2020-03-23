@@ -1,5 +1,5 @@
 import tensorflow as tf
-from utils import *
+from ..utils import *
 
 @tf.function
 def lpredator(f, bounds, particles=6, predators=1, dim=3,
@@ -79,7 +79,7 @@ def lpredator(f, bounds, particles=6, predators=1, dim=3,
     return pb[best_i], pb_x[best_i], i
 
 if __name__ == '__main__':
-    from functions import *
+    from ..functions import *
     import time
 
     particles = 30
